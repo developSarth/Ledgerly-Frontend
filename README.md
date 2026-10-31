@@ -1,30 +1,31 @@
-# Ledgerly invoice follow-up agent
+# Ledgerly invoice follow-up demo
 
-A browser demo for a law-firm receivables assistant. The workflow and message sending remain simulated. CSV invoice imports can be saved to Supabase when a project is configured; without Supabase configuration, the app uses fictional sample data in browser storage.
+Ledgerly has a Vite browser frontend and a Python/FastAPI backend. The original demo behavior is preserved: email connection, reminders, approvals, replies, and payment actions are simulated. No email or SMS is sent and there is no background scheduler. Backend integration scaffolding is prepared for GPT-5.4 mini, Gmail OAuth, and plain-text email/prompt templates, but it is not yet connected to the UI or live mailboxes.
+
+## Project layout
+
+- `Frontend/` — HTML, CSS, and browser JavaScript, built with Vite.
+- `backend/` — Python API, Supabase auth verification, and database calls.
+- `supabase/migrations/` — database schema, Row Level Security, and atomic workflow RPCs.
+- `legacy-node/` — untouched copies of the original root-level JavaScript files.
 
 ## Run locally
 
-1. Install Node.js, then run `npm install`.
-2. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable/anon key.
-3. Apply `supabase/migrations/202610250001_invoice_csv_imports.sql` in the Supabase SQL Editor.
-4. Start the app with `npm run dev` and open the local URL it prints.
-5. Choose **Sign in to save**, create an account, and provide a firm name. Supabase email confirmation may need to be completed before signing in, depending on the project’s Auth settings.
+1. Configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `Ledgerly/.env` for cloud sign-in and persistence. Keep service-role keys out of this app. The backend also accepts the previous `VITE_SUPABASE_*` names.
+2. For a new Supabase project, run `supabase/setup.sql` once in the SQL Editor. It contains both migrations in the required order. If applying migrations individually, run `202610250001_invoice_csv_imports.sql` before `202610300001_workflow_safety.sql`.
+3. In one terminal, create a Python environment in `backend/`, install `backend/requirements.txt`, then run `uvicorn main:app --reload --host 127.0.0.1 --port 8000` from that folder.
+4. In a second terminal, run `npm ci` and `npm run dev` from `Frontend/`, then open the Vite URL.
 
-The migration creates owner-scoped firm, import, invoice, and invoice-event tables, enables Row Level Security, and adds atomic CSV import, reply persistence, and demo-outreach recording functions. The client never needs a Supabase service-role key. Keep `.env.local` private and do not commit it.
+5. For optional integration development, copy the blank OpenAI and Gmail variables from `.env.example` into `.env`. Install the added Python packages with `pip install -r backend/requirements.txt`. Keep `AI_FEATURES_ENABLED`, `GMAIL_FEATURES_ENABLED`, and `EMAIL_SEND_ENABLED` false until the corresponding authenticated routes and safeguards are implemented. Never place OpenAI or Google client secrets in `Frontend/.env` or any `VITE_*` variable.
 
-## Demo flow
+The Vite development server proxies `/api` requests to FastAPI. For deployment, set `FRONTEND_ORIGINS` on the API to the exact frontend origins and `VITE_API_BASE_URL` in the frontend build if the API is hosted separately.
 
-- Start with the sample invoices already shown, or sign in and import a CSV. With Supabase configured, invoice rows and import counts are saved in the database. Newly imported unpaid invoices appear in the plan; import itself does not count as contact.
-- The **Connect email** button simulates a firm address connection for the frontend. It does not request mailbox permissions.
-- Review **Today’s plan** and choose **Approve Today** to enable the ongoing follow-up policy and simulate today’s planned actions.
-- Choose **Advance 1 week** to move simulated time forward and run the policy against the new date. Gentle follow-ups happen every seven days; after 21 days overdue, the firmer message waits for approval.
-- Simulate a client reply to test promises, invoice-access questions, requests for help, disputes, payment claims, opt-outs, and out-of-office messages. Follow-up pauses where appropriate; with Supabase configured, reply summaries persist in the database.
-- In local-only mode, mark an invoice paid to see the totals update. With Supabase configured, upload a refreshed CSV showing it as paid; that CSV remains the source of truth.
+## Demo behavior
 
-With Supabase configured, invoice workflow state and reply summaries persist across sessions. Outreach actions are recorded as simulations only. The database checks the latest CSV before recording an action: the invoice must be unpaid, included in the latest complete snapshot, and that snapshot must be no more than 24 hours old. A paid status, stale/incomplete snapshot, or invoice missing from the latest full CSV blocks the action. Re-upload the complete current invoice list to refresh status. No real email or SMS is sent, and there is no background scheduler; **Advance 1 week** is a demo control for moving simulated time.
+- Without Supabase configuration, fictional sample invoices and simulated actions run locally in the browser.
+- With Supabase configured, sign-in, firm data, invoice imports, reply summaries, and workflow events are stored in the firm's Supabase project. API calls use the signed-in user's JWT and anon/publishable key, so database Row Level Security remains active.
+- CSV imports support the existing common header aliases and retain extra source columns. Empty/oversized files, malformed rows, ambiguous dates, duplicate headers or invoice IDs, invalid currency/status/email/amount values, and unmapped required columns are held with row-specific feedback; imports are all-or-nothing. Replaying the same pending upload is idempotent.
+- Cloud API operations use typed request models and derive firm scope from the authenticated user. Each API response includes a request ID for support diagnostics; repeated reply and resume actions are safely deduplicated.
+- Stage 1 and later reminders are simulations. The demo approval gate, weekly advance control, reply types, status freshness checks, dashboard, and activity feed remain available.
 
-The email connection control is a visual simulation only; it does not grant mailbox permissions. Sample data is fictional. In configured Supabase mode, imported invoice records, reply summaries, and workflow state persist in that Supabase project. Do not import real client data into a demo project until the firm has approved its data-handling and security setup.
-
-## CSV columns
-
-Required: invoice ID or number, client name, client email, amount or balance due, and due date. Optional: currency, issue date, status, and balance due. Common headers such as `Invoice Number`, `Client`, `Email`, `Total`, `Due Date`, `Balance Due`, and `Payment Status` are recognized. Duplicate invoice IDs and rows missing required values are skipped. Spreadsheet file parsing and Clio API access are not implemented.
+Clio API access, live mailbox access, real email delivery, payment processing, and production scheduling are not implemented. Use synthetic data unless the firm has approved the project's data-handling and security setup.
