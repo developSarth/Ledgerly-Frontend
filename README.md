@@ -1,31 +1,34 @@
-# Ledgerly invoice follow-up demo
+# Ledgerly invoice follow-up workflow
 
-Ledgerly has a Vite browser frontend and a Python/FastAPI backend. The original demo behavior is preserved: email connection, reminders, approvals, replies, and payment actions are simulated. No email or SMS is sent and there is no background scheduler. Backend integration scaffolding is prepared for GPT-5.4 mini, Gmail OAuth, and plain-text email/prompt templates, but it is not yet connected to the UI or live mailboxes.
+Ledgerly is a human-approved invoice follow-up workflow for law firms. The FastAPI backend authenticates firm users, reads invoice sources, prepares a reminder draft through a bounded LangGraph workflow, pauses for human review, and sends only after a separate authorized send action. A confirmed email is logged as a Clio Communication and, when a matter is linked, a separate non-billable/no-charge Clio Activity. Ledgerly does not create or modify Clio Bills.
 
 ## Project layout
 
-- `Frontend/` — HTML, CSS, and browser JavaScript, built with Vite.
-- `backend/` — Python API, Supabase auth verification, and database calls.
-- `supabase/migrations/` — database schema, Row Level Security, and atomic workflow RPCs.
-- `legacy-node/` — untouched copies of the original root-level JavaScript files.
+- `Frontend/` — Vite app. It calls FastAPI for business data and actions; it does not call Supabase REST/RPC directly.
+- `backend/` — FastAPI, LangChain integrations, LangGraph orchestration, Clio/Gmail adapters, and authorization checks.
+- `supabase/` — base schema and ordered migrations.
+- `docs/DATABASE_DESIGN.md` — schema, RLS, RPC, and integration reference.
+- `docs/WORKFLOW_MAP.md` — end-user flow, roles, states, and operating boundaries.
+- `legacy-node/` — preserved original Node.js prototype, not part of the running app.
 
-## Run locally
+## Local setup
 
-1. Configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `Ledgerly/.env` for cloud sign-in and persistence. Keep service-role keys out of this app. The backend also accepts the previous `VITE_SUPABASE_*` names.
-2. For a new Supabase project, run `supabase/setup.sql` once in the SQL Editor. It contains both migrations in the required order. If applying migrations individually, run `202610250001_invoice_csv_imports.sql` before `202610300001_workflow_safety.sql`.
-3. In one terminal, create a Python environment in `backend/`, install `backend/requirements.txt`, then run `uvicorn main:app --reload --host 127.0.0.1 --port 8000` from that folder.
-4. In a second terminal, run `npm ci` and `npm run dev` from `Frontend/`, then open the Vite URL.
+1. Configure backend environment variables in `Ledgerly/.env`. Required Supabase settings are `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and backend-only `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`. Add the configured model, Gmail, Clio, encryption, and frontend-origin values described in `backend/README.md` and `.env.example`.
+2. For a new Supabase project, run `supabase/setup.sql`, then every migration in filename order. Existing projects should apply only unapplied migrations, including `202611040001_clio_activity_audit.sql` for the Activity audit path. Do not replay migrations already applied.
+3. In `backend/`, install `requirements.txt` and run `uvicorn main:app --reload --host 127.0.0.1 --port 8000`.
+4. In `Frontend/`, run `npm ci` and `npm run dev`, then open the Vite URL. The frontend needs only the optional `VITE_LEDGERLY_API_BASE_URL` when the API is on a separate origin. Supabase credentials must never be placed in Vite variables.
 
-5. For optional integration development, copy the blank OpenAI and Gmail variables from `.env.example` into `.env`. Install the added Python packages with `pip install -r backend/requirements.txt`. Keep `AI_FEATURES_ENABLED`, `GMAIL_FEATURES_ENABLED`, and `EMAIL_SEND_ENABLED` false until the corresponding authenticated routes and safeguards are implemented. Never place OpenAI or Google client secrets in `Frontend/.env` or any `VITE_*` variable.
+## Current behavior and boundaries
 
-The Vite development server proxies `/api` requests to FastAPI. For deployment, set `FRONTEND_ORIGINS` on the API to the exact frontend origins and `VITE_API_BASE_URL` in the frontend build if the API is hosted separately.
+- CSV rows are parsed and validated deterministically. Unfamiliar headers can be suggested from header names only; a staff member confirms the mapping before import.
+- Clio Bill sync is read-only. After a confirmed Gmail send, Ledgerly logs an EmailCommunication and then attempts a TimeEntry Activity only when a linked matter exists. The Activity includes `non_billable=true`, `no_charge=true`, and an opaque workflow marker; it contains no duration, rate, email body, or billable narrative. Clio app access requires Activities Read and Write for creation and reconciliation.
+- Invoice intake decisions and reminder draft review are distinct. Draft approval is not sending. A separate authorized person action sends the reviewed message; source freshness, firm policy, suppression, role, and delivery idempotency are checked again at send time.
+- The LangGraph workflow is bounded and stateful. The model can assist with draft text, CSV header suggestions, and reply categorization; deterministic backend logic owns permissions, state transitions, and external side effects.
+- Gmail replies are manually synchronized, deduplicated, and held for staff review. A new reply pauses outreach. The system does not auto-reply or automatically resume a paused invoice.
+- Roles are owner, admin, reviewer, sender, and viewer. The configured policy can require a different sender from the approver. Firm-local timezone and policy settings are managed through the API.
+- Dashboard data comes from the authenticated backend and persisted firm records. No sample invoices or sample client activity are seeded into the live UI; a new firm sees empty states until it imports or syncs a source.
+- The browser stores authentication tokens and a non-sensitive CSV idempotency key only. Invoice, client, workflow, reply, and audit records are not retained as a local demo ledger.
+- Uncertain Gmail sends are not retried automatically. Clio Communication and Activity reconciliation are read-only checks of exact records and do not create duplicates.
+- Clio Billing writes, automated/scheduled sending, and automated client replies are disabled.
 
-## Demo behavior
-
-- Without Supabase configuration, fictional sample invoices and simulated actions run locally in the browser.
-- With Supabase configured, sign-in, firm data, invoice imports, reply summaries, and workflow events are stored in the firm's Supabase project. API calls use the signed-in user's JWT and anon/publishable key, so database Row Level Security remains active.
-- CSV imports support the existing common header aliases and retain extra source columns. Empty/oversized files, malformed rows, ambiguous dates, duplicate headers or invoice IDs, invalid currency/status/email/amount values, and unmapped required columns are held with row-specific feedback; imports are all-or-nothing. Replaying the same pending upload is idempotent.
-- Cloud API operations use typed request models and derive firm scope from the authenticated user. Each API response includes a request ID for support diagnostics; repeated reply and resume actions are safely deduplicated.
-- Stage 1 and later reminders are simulations. The demo approval gate, weekly advance control, reply types, status freshness checks, dashboard, and activity feed remain available.
-
-Clio API access, live mailbox access, real email delivery, payment processing, and production scheduling are not implemented. Use synthetic data unless the firm has approved the project's data-handling and security setup.
+The firm should use synthetic records until it has reviewed provider data handling, workflow policy, opt-out handling, and production deployment controls. See [backend setup and API details](backend/README.md), [database and security design](docs/DATABASE_DESIGN.md), and [workflow map](docs/WORKFLOW_MAP.md).
