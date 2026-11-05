@@ -6,7 +6,7 @@
   <title>Invoice Chaser — Receivables assistant</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Questrial&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,29 +24,34 @@
       </nav>
       <div class="side-label tools-label">TOOLS</div>
       <nav class="nav-list"><button class="nav-item" id="import-nav"><span class="nav-icon">⇧</span>Import invoices</button><button class="nav-item" id="rules-nav"><span class="nav-icon">⚙</span>Chasing rules</button></nav>
-      <div class="sidebar-bottom"><div class="privacy-badge"><span>●</span><div><strong>Demo mode</strong><small>No emails are sent</small></div></div><button class="profile"><span class="profile-avatar">JD</span><span>Jordan Davis<small>Firm administrator</small></span><span class="dots">•••</span></button></div>
+      <div class="sidebar-bottom"><button class="profile"><span class="profile-avatar">JD</span><span>Jordan Davis<small>Firm administrator</small></span><span class="dots">•••</span></button></div>
     </aside>
 
     <main class="main-area">
-      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-page">Overview</strong></div><div class="top-actions"><button class="connect-button" id="cloud-account" hidden>Sign in to save</button><button class="connect-button" id="connect-email"><span class="mail-icon">✉</span><span id="email-label">Connect email</span></button><span class="demo-pill"><i></i> SIMULATION</span><button class="icon-button" title="Help">?</button><button class="top-avatar">JD</button></div></header>
+      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-page">Overview</strong></div><div class="top-actions"><button class="top-avatar" title="Jordan Davis">JD</button></div></header>
       <section class="content" id="overview-view">
-        <div class="welcome-row"><div><div class="eyebrow" id="today-label">MONDAY, OCTOBER 19, 2026</div><h1>Good morning, Jordan <span>✳</span></h1><p class="subtitle">Your receivables assistant is keeping things moving.</p></div><div class="welcome-actions"><button class="button button-secondary" id="import-button"><span>⇧</span> Import CSV</button><button class="button button-primary" id="advance-week"><span>↻</span> Advance 1 week <span class="button-arrow">→</span></button></div></div>
-
-        <div class="agent-banner"><div class="agent-mark"><span>✳</span></div><div class="agent-copy"><div class="agent-title">Your assistant <span class="live-dot"></span></div><p id="agent-summary">Review today’s outreach once to start the agent. It will continue automatically, pausing for replies and checking invoice status.</p></div><button class="text-button" id="ask-agent">Ask your assistant <span>↗</span></button></div>
-
-        <section class="today-plan"><div class="plan-heading"><div><div class="plan-kicker"><span class="plan-icon">✦</span> DAILY PLAN</div><h2 id="plan-title">Here’s what I plan to do today</h2><p id="plan-subtitle">Review this first batch. Once approved, I’ll keep following up automatically.</p></div><button class="button button-primary" id="approve-today">Approve Today <span class="button-arrow">→</span></button></div><div class="plan-items" id="plan-items"></div><div class="plan-foot"><span>✓</span> I’ll check for payment and client replies before every follow-up. Nothing is sent in this demo.</div></section>
+        <div class="welcome-row"><div><div class="eyebrow" id="today-label">MONDAY, OCTOBER 19, 2026</div><h1>Good morning, Jordan <span>✳</span></h1><p class="subtitle">Your receivables assistant is keeping things moving.</p></div><div class="welcome-actions"><button class="button button-secondary" id="import-button"><span>⇧</span> Import CSV</button></div></div>
 
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-top"><span>Outstanding</span><span class="stat-icon indigo">$</span></div><div class="stat-value" id="stat-outstanding">$0</div><div class="stat-note"><span class="neutral-dot"></span> Across <b id="stat-count">0 invoices</b></div></article>
           <article class="stat-card"><div class="stat-top"><span>Overdue</span><span class="stat-icon orange">◷</span></div><div class="stat-value" id="stat-overdue">$0</div><div class="stat-note"><span class="orange-text" id="overdue-count">0 invoices</span><span> need follow-up</span></div></article>
-          <article class="stat-card"><div class="stat-top"><span>Needs your approval</span><span class="stat-icon purple">✉</span></div><div class="stat-value" id="stat-approval">0</div><div class="stat-note"><span>Firmer reminders waiting</span></div></article>
-          <article class="stat-card"><div class="stat-top"><span>Recovered this month</span><span class="stat-icon green">✓</span></div><div class="stat-value" id="stat-recovered">$0</div><div class="stat-note"><span class="green-text">↑ Simulated payments</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Needs your approval</span><span class="stat-icon purple">✉</span></div><div class="stat-value" id="stat-approval">0</div><div class="stat-note"><span>Invoices waiting for review</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Recovered this month</span><span class="stat-icon green">✓</span></div><div class="stat-value" id="stat-recovered">$0</div><div class="stat-note"><span class="green-text">↑ Payments recorded</span></div></article>
         </div>
+
+        <div class="assistant-island"><div class="agent-banner"><div class="agent-mark"><span>✳</span></div><div class="agent-copy"><div class="agent-title">Your assistant <span class="live-dot"></span></div><p id="agent-summary">Review today’s invoices and choose what to approve.</p></div><button class="text-button" id="ask-agent">Ask your assistant <span>↗</span></button></div>
+
+        <section class="today-plan"><div class="plan-heading"><div><div class="plan-kicker"><span class="plan-icon">✦</span> DAILY PLAN</div><h2 id="plan-title">Invoices to review today</h2><p id="plan-subtitle">These invoices are ready for follow-up. Approve them individually or together.</p></div><div class="plan-actions"><button class="button button-secondary" id="select-plan">Select all</button><button class="button button-primary" id="approve-today">Approve selected <span class="button-arrow">→</span></button></div></div><div class="plan-items" id="plan-items"></div><div class="plan-foot"><span>✓</span> Approved invoices will be marked ready for follow-up.</div></section></div>
 
         <div class="section-heading"><div><h2>Today’s follow-ups</h2><p>Here’s what needs a little attention.</p></div><button class="view-all" id="view-invoices">View all invoices <span>→</span></button></div>
         <div class="followup-layout"><div class="invoice-list" id="followup-list"></div><aside class="right-rail">
-          <section class="rail-card"><div class="rail-heading"><h3>Waiting for approval</h3><span class="small-count" id="approval-count">0</span></div><p class="rail-subtitle">Firmer messages are always yours to approve.</p><div id="approval-list" class="approval-list"></div><button class="rail-link" data-go="approvals">Review approvals <span>→</span></button></section>
-          <section class="rail-card week-card"><div class="rail-heading"><h3>Weekly check-in</h3><span class="week-spark">✳</span></div><p class="rail-subtitle">Your assistant follows up every week, then checks back when a client promises to pay.</p><div class="rule-line"><span class="rule-number">1</span><span>Invoice arrives</span><b>Friendly hello</b></div><div class="rule-line"><span class="rule-number">2</span><span>Each week</span><b>Gentle nudge</b></div><div class="rule-line"><span class="rule-number">3</span><span>3 weeks late</span><b>Firmer, per policy</b></div></section>
+          <section class="rail-card sequence-card"><div class="rail-heading"><h3>Current follow-up sequence</h3><span class="sequence-count">5 steps</span></div><p class="rail-subtitle">A quick look at how an invoice moves through the workspace.</p><div class="followup-sequence">
+            <div class="sequence-step"><span class="sequence-number">1</span><div><strong>Invoice uploaded</strong><small>Saved to the invoice list.</small></div></div>
+            <div class="sequence-step"><span class="sequence-number sequence-alert">2</span><div><strong>Review and approve</strong><small>Approval is required before follow-up.</small></div></div>
+            <div class="sequence-step"><span class="sequence-number">3</span><div><strong>Ready for follow-up</strong><small>Approved invoices enter the daily plan.</small></div></div>
+            <div class="sequence-step"><span class="sequence-number">4</span><div><strong>Weekly check-in</strong><small>Recheck unpaid invoices every 7 days.</small></div></div>
+            <div class="sequence-step"><span class="sequence-number sequence-last">5</span><div><strong>Pause when needed</strong><small>Payment or a client reply can pause reminders.</small></div></div>
+          </div></section>
         </aside></div>
         <div class="section-heading activity-heading"><div><h2>Recent activity</h2><p>A clear record of what your assistant has done.</p></div><button class="view-all" id="view-activity">See activity <span>→</span></button></div>
         <div class="activity-card" id="recent-activity"></div>
@@ -60,6 +65,22 @@
   <input type="file" id="csv-file" accept=".csv,text/csv" hidden>
   <div class="toast" id="toast" role="status"></div>
   <div class="modal-backdrop hidden" id="modal-backdrop"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
-  <script type="module" src="app.js"></script>
+  <script type="module">
+    const loadClassic = (src) => new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+
+    if (location.protocol === 'file:') {
+      await loadClassic('cloud.js');
+      await loadClassic('app.js');
+    } else {
+      await import('./cloud.js');
+      await import('./app.js');
+    }
+  </script>
 </body>
 </html>
